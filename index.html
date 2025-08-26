@@ -3,16 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="康师傅冰红茶口味推荐助手 - 通过几个简单问题，找到最适合你的口味">
   <title>康师傅冰红茶口味推荐助手</title>
-  <meta name="description" content="康师傅冰红茶口味推荐助手，通过几个简单问题找到最适合你的口味">
-  <meta name="keywords" content="康师傅,冰红茶,口味推荐,饮料选择">
-  <meta property="og:title" content="康师傅冰红茶口味推荐助手">
-  <meta property="og:description" content="通过几个简单问题，找到最适合你的康师傅冰红茶口味">
-  <meta property="og:image" content="https://yourdomain.com/images/og-image.jpg">
-  <meta property="og:url" content="https://yourdomain.com/index.html">
-  <meta name="twitter:card" content="summary_large_image">
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
-  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; }
     body { background: linear-gradient(135deg, #ff7e5f, #feb47b); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
@@ -39,21 +31,11 @@
     .typing-dot:nth-child(3) { animation-delay: 0.4s; }
     @keyframes typingAnimation { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
     .restart-btn { background: #e44d26; color: white; border: none; border-radius: 20px; padding: 10px 20px; cursor: pointer; margin: 15px auto 0; display: block; }
-    /* 响应式设计改进 */
     @media (max-width: 600px) {
       .container { height: 95vh; }
       .message-content { max-width: 85%; }
       .option-btn { padding: 10px 12px; font-size: 13px; }
     }
-    @media (max-width: 480px) {
-      body { padding: 10px; }
-      .header h1 { font-size: 20px; }
-      .header p { font-size: 12px; }
-      .chat-container { padding: 15px; }
-      .message-content { padding: 10px 14px; font-size: 14px; }
-    }
-    /* 加载优化 */
-    .loading { display: none; }
   </style>
 </head>
 <body>
@@ -66,9 +48,8 @@
     <div class="input-container" id="inputContainer"></div>
   </div>
 
-  <!-- 加载优化：关键JS内联，非关键JS异步加载 -->
   <script>
-    // 关键代码保持不变
+    // 产品数据
     const products = {
       "原味": [5, 3, 1, 0, 1, 2],
       "无糖": [0, 2, 1, 3, 1, 1],
@@ -81,38 +62,62 @@
       "鸡尾酒风味长岛冰茶": [3, 2, 1, 0, 1, 3]
     };
 
+    // 维度定义
     const dimensions = ["甜度级", "冰爽强度", "水果风味", "功能健康", "基底茶类", "社交氛围"];
     const dimensionWeights = [4, 5, 4, 5, 5, 4];
+    
+    // 标签到候选产品的映射
     const tagToCandidates = {
       "绿茶": ["柠檬冰绿茶", "薄荷金银花劲凉", "2倍薄荷金银花劲凉"],
       "健康无负担": ["无糖", "低糖高纤", "柠檬冰绿茶", "薄荷金银花劲凉", "2倍薄荷金银花劲凉"],
       "膳食纤维": ["无糖", "低糖高纤"]
     };
 
+    // 问题列表
     const questions = [
-      { id: 1, text: "你更喜欢哪种茶底作为基础呢？", options: [{ text: "红茶", effects: {"基底茶类": 1} }, { text: "绿茶", effects: {"基底茶类": -1} }] },
-      { id: 2, text: "关于甜度和健康，你更看重哪一点呢？", options: [
+      { 
+        id: 1, 
+        text: "你更喜欢哪种茶底作为基础呢？", 
+        options: [
+          { text: "红茶", effects: {"基底茶类": 1} }, 
+          { text: "绿茶", effects: {"基底茶类": -1} }
+        ] 
+      },
+      { 
+        id: 2, 
+        text: "关于甜度和健康，你更看重哪一点呢？", 
+        options: [
           { text: "好喝最重要，经典口味yyds！", effects: {"甜度级": 3, "功能健康": 0} },
           { text: "喜欢甜味，但希望健康无负担，无糖最好。", effects: {"甜度级": 0, "功能健康": 3} },
           { text: "不仅无糖，最好还能有点健康加持，比如膳食纤维。", effects: {"甜度级": 0, "功能健康": 5} },
           { text: "我不太关心这个，更看重其他特点。", effects: {} }
-      ]},
-      { id: 3, text: "你通常会在什么场合想喝冰茶呢？", options: [
+        ]
+      },
+      { 
+        id: 3, 
+        text: "你通常会在什么场合想喝冰茶呢？", 
+        options: [
           { text: "日常解渴，当水喝。", effects: {"社交氛围": 1} },
           { text: "吃饭的时候，搭配餐饮。", effects: {"社交氛围": 2} },
           { text: "运动健身、需要活力的时候。", effects: {"功能健康": 2} },
           { text: "熬夜、加班、开车，需要提神醒脑！", effects: {"冰爽强度": 5} },
           { text: "朋友聚会、开派对，想来点特别的。", effects: {"社交氛围": 5} }
-      ]},
-      { id: 4, text: "你渴望一种什么样的口感体验？", options: [
+        ]
+      },
+      { 
+        id: 4, 
+        text: "你渴望一种什么样的口感体验？", 
+        options: [
           { text: "极致的冰爽，越凉越带劲！", effects: {"冰爽强度": 5} },
           { text: "丰富的水果风味，像在喝果汁茶。", effects: {"水果风味": 4} },
           { text: "经典的味道，永不过时。", effects: {"甜度级": 2} },
           { text: "清爽解腻，没什么负担感。", effects: {"甜度级": -1, "水果风味": 1} },
           { text: "想来点微醺和成年人的感觉。", effects: {"社交氛围": 5, "水果风味": 2} }
-      ]}
+        ]
+      }
     ];
 
+    // 推荐模板
     const recommendationTemplates = {
       "原味": "经典永不过时！你可能会喜欢【原味康师傅冰红茶】。",
       "无糖": "健康无负担！【无糖康师傅冰红茶】完美契合你的需求。",
@@ -125,10 +130,12 @@
       "鸡尾酒风味长岛冰茶": "派对氛围担当！【鸡尾酒风味长岛冰茶】适合聚会场合。"
     };
 
+    // 初始化状态
     let userVector = [0, 0, 0, 0, 0, 0];
     let currentQuestionIndex = 0;
     let candidatePool = null;
 
+    // 获取DOM元素
     const chatContainer = document.getElementById('chatContainer');
     const inputContainer = document.getElementById('inputContainer');
 
@@ -260,6 +267,7 @@
       setTimeout(() => askQuestion(currentQuestionIndex + 1), 500);
     }
 
+    // 计算用户向量和产品向量之间的距离
     function calculateDistance(userVec, productVec) {
       let weightedSquaredDiff = 0;
       for (let i = 0; i < userVec.length; i++) {
@@ -275,34 +283,42 @@
       return Math.sqrt(weightedSquaredDiff);
     }
 
+    // 应用候选过滤器
     function applyCandidateFilter(tag) {
       const filtered = tagToCandidates[tag];
       if (!filtered) return;
+
       if (candidatePool === null) {
         candidatePool = new Set(filtered);
       } else {
-        candidatePool = new Set(filtered.filter(p => candidatePool.has(p)));
+        // 原来是交集：candidatePool = new Set(filtered.filter(p => candidatePool.has(p)))
+        // 改成：如果交集为空，就回退成当前条件
+        const newPool = new Set(filtered.filter(p => candidatePool.has(p)));
+        if (newPool.size === 0) {
+          candidatePool = new Set(filtered);
+        } else {
+          candidatePool = newPool;
+        }
       }
     }
 
+    // 推荐产品
     function recommendProduct() {
       const filteredProducts = candidatePool ? Array.from(candidatePool) : Object.keys(products);
       let topThree;
 
-      // 修复了随机选择逻辑，确保不会超出数组范围
       if (filteredProducts.length === 0) {
-        // 从指定的四种产品中随机选择
+        // fallback：从指定产品里抽选
         const specifiedProducts = ["薄荷金银花劲凉", "2倍薄荷金银花劲凉", "原味", "西瓜"];
         const availableProducts = specifiedProducts.filter(p => p in products);
-        
-        // 确保不会选择超出数组范围
+
+        // 保底两个固定 + 随机抽若干
         const numChoices = Math.min(2, availableProducts.length);
         const randomChoices = [...availableProducts]
           .sort(() => 0.5 - Math.random())
           .slice(0, numChoices);
-        
-        // 构建topThree数组，确保不会超出范围
-        topThree = [["低糖高纤", "柠檬冰绿茶", 0]];
+
+        topThree = [["低糖高纤", 0], ["柠檬冰绿茶", 0]];
         for (let i = 0; i < randomChoices.length; i++) {
           topThree.push([randomChoices[i], 0]);
         }
@@ -314,10 +330,34 @@
         topThree = Object.entries(distances).sort((a, b) => a[1] - b[1]).slice(0, 3);
       }
 
-      // 确保随机索引不会超出范围
-      const randomIndex = Math.floor(Math.random() * topThree.length);
-      const recommendedProduct = topThree[randomIndex][0];
+      // 随机选择一个
+      let recommendedProduct = topThree[Math.floor(Math.random() * topThree.length)][0];
 
+      // 后处理：降低"无糖"的概率
+      if (recommendedProduct === "无糖") {
+        const lowFreqProducts = ["原味", "西瓜", "低糖高纤", "薄荷金银花劲凉", "2倍薄荷金银花劲凉"];
+        if (Math.random() < 0.5) {
+          recommendedProduct = lowFreqProducts[Math.floor(Math.random() * lowFreqProducts.length)];
+        }
+      }
+
+      // 后处理：降低"鸡尾酒风味长岛冰茶"的概率
+      if (recommendedProduct === "鸡尾酒风味长岛冰茶") {
+        const lowFreqProducts = ["原味", "西瓜"];
+        if (Math.random() < 0.2) {
+          recommendedProduct = lowFreqProducts[Math.floor(Math.random() * lowFreqProducts.length)];
+        }
+      }
+
+      // 后处理：降低"薄荷金银花劲凉"和"2倍薄荷金银花劲凉"的概率
+      if (recommendedProduct.includes("薄荷金银花劲凉")) {
+        const lowFreqProducts = ["原味", "无糖", "西瓜", "鸡尾酒风味长岛冰茶"];
+        if (Math.random() < 0.2) {
+          recommendedProduct = lowFreqProducts[Math.floor(Math.random() * lowFreqProducts.length)];
+        }
+      }
+
+      // 展示推荐结果
       let recommendationText;
       if (filteredProducts.length === 0) {
         recommendationText = `<strong>推荐结果: ${recommendedProduct}</strong><br><br>${recommendationTemplates[recommendedProduct]}<br><br><em>（你的偏好较为独特，我们为你准备了精选推荐哦~）</em>`;
@@ -361,22 +401,11 @@
       setTimeout(() => { askQuestion(0); }, 1500);
     }
 
+    // 页面加载时初始化
     window.onload = function () {
       addBotMessage("嗨！我是康师傅冰红茶推荐小助手~ 通过几个简单的问题，我就能帮你找到你的\"本命\"口味！");
       setTimeout(() => { askQuestion(0); }, 1500);
     };
-  </script>
-
-  <!-- 非关键JS异步加载 -->
-  <script async src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  
-  <!-- Google Analytics (示例，需要替换GA_MEASUREMENT_ID) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'GA_MEASUREMENT_ID');
   </script>
 </body>
 </html>
