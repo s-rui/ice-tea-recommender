@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>康师傅冰红茶口味推荐助手</title>
+  <meta name="description" content="康师傅冰红茶口味推荐助手，通过几个简单问题找到最适合你的口味">
+  <meta name="keywords" content="康师傅,冰红茶,口味推荐,饮料选择">
+  <meta property="og:title" content="康师傅冰红茶口味推荐助手">
+  <meta property="og:description" content="通过几个简单问题，找到最适合你的康师傅冰红茶口味">
+  <meta property="og:image" content="https://yourdomain.com/images/og-image.jpg">
+  <meta property="og:url" content="https://yourdomain.com/index.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+    body { background: linear-gradient(135deg, #ff7e5f, #feb47b); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+    .container { width: 100%; max-width: 800px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); overflow: hidden; display: flex; flex-direction: column; height: 90vh; }
+    .header { background: linear-gradient(to right, #e44d26, #f16529); color: white; padding: 20px; text-align: center; }
+    .header h1 { font-size: 24px; margin-bottom: 5px; }
+    .header p { font-size: 14px; opacity: 0.9; }
+    .chat-container { flex: 1; overflow-y: auto; padding: 20px; background: #f9f9f9; }
+    .message { margin-bottom: 15px; display: flex; }
+    .bot-message { justify-content: flex-start; }
+    .user-message { justify-content: flex-end; }
+    .message-content { max-width: 70%; padding: 12px 16px; border-radius: 18px; line-height: 1.5; }
+    .bot-message .message-content { background: white; border: 1px solid #e0e0e0; border-bottom-left-radius: 4px; }
+    .user-message .message-content { background: #e44d26; color: white; border-bottom-right-radius: 4px; }
+    .options-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .option-btn { background: white; border: 1px solid #e0e0e0; border-radius: 20px; padding: 8px 16px; font-size: 14px; cursor: pointer; transition: all 0.3s; }
+    .option-btn:hover { background: #f0f0f0; border-color: #e44d26; }
+    .input-container { padding: 15px 20px; background: white; border-top: 1px solid #e0e0e0; display: flex; flex-direction: column; }
+    .product-recommendation { background: linear-gradient(to right, #4CAF50, #8BC34A); color: #000; padding: 15px; border-radius: 10px; margin-top: 15px; font-weight: 500; }
+    .typing-indicator { display: inline-flex; align-items: center; color: #888; font-style: italic; }
+    .typing-dot { width: 6px; height: 6px; background: #888; border-radius: 50%; margin-left: 4px; animation: typingAnimation 1.4s infinite ease-in-out; }
+    .typing-dot:nth-child(1) { animation-delay: 0s; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typingAnimation { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+    .restart-btn { background: #e44d26; color: white; border: none; border-radius: 20px; padding: 10px 20px; cursor: pointer; margin: 15px auto 0; display: block; }
+    /* 响应式设计改进 */
+    @media (max-width: 600px) {
+      .container { height: 95vh; }
+      .message-content { max-width: 85%; }
+      .option-btn { padding: 10px 12px; font-size: 13px; }
+    }
+    @media (max-width: 480px) {
+      body { padding: 10px; }
+      .header h1 { font-size: 20px; }
+      .header p { font-size: 12px; }
+      .chat-container { padding: 15px; }
+      .message-content { padding: 10px 14px; font-size: 14px; }
+    }
+    /* 加载优化 */
+    .loading { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>康师傅冰红茶口味推荐助手</h1>
+      <p>通过几个简单问题，找到最适合你的口味</p>
+    </div>
+    <div class="chat-container" id="chatContainer"></div>
+    <div class="input-container" id="inputContainer"></div>
+  </div>
+
+  <!-- 加载优化：关键JS内联，非关键JS异步加载 -->
+  <script>
+    // 关键代码保持不变
+    const products = {
+      "原味": [5, 3, 1, 0, 1, 2],
+      "无糖": [0, 2, 1, 3, 1, 1],
+      "低糖高纤": [1, 0, 0, 5, 2, 0],
+      "热带水果": [3, 0, 5, 1, 1, 2],
+      "柠檬冰绿茶": [2, 3, 1, 0, -1, 1],
+      "薄荷金银花劲凉": [3, 4, 0, 1, 1, 1],
+      "2倍薄荷金银花劲凉": [3, 5, 0, 0, 1, 1],
+      "西瓜": [4, 3, 5, 1, 1, 2],
+      "鸡尾酒风味长岛冰茶": [3, 2, 1, 0, 1, 3]
+    };
+
+    const dimensions = ["甜度级", "冰爽强度", "水果风味", "功能健康", "基底茶类", "社交氛围"];
+    const dimensionWeights = [4, 5, 4, 5, 5, 4];
+    const tagToCandidates = {
+      "绿茶": ["柠檬冰绿茶", "薄荷金银花劲凉", "2倍薄荷金银花劲凉"],
+      "健康无负担": ["无糖", "低糖高纤", "柠檬冰绿茶", "薄荷金银花劲凉", "2倍薄荷金银花劲凉"],
+      "膳食纤维": ["无糖", "低糖高纤"]
+    };
+
+    const questions = [
+      { id: 1, text: "你更喜欢哪种茶底作为基础呢？", options: [{ text: "红茶", effects: {"基底茶类": 1} }, { text: "绿茶", effects: {"基底茶类": -1} }] },
+      { id: 2, text: "关于甜度和健康，你更看重哪一点呢？", options: [
+          { text: "好喝最重要，经典口味yyds！", effects: {"甜度级": 3, "功能健康": 0} },
+          { text: "喜欢甜味，但希望健康无负担，无糖最好。", effects: {"甜度级": 0, "功能健康": 3} },
+          { text: "不仅无糖，最好还能有点健康加持，比如膳食纤维。", effects: {"甜度级": 0, "功能健康": 5} },
+          { text: "我不太关心这个，更看重其他特点。", effects: {} }
+      ]},
+      { id: 3, text: "你通常会在什么场合想喝冰茶呢？", options: [
+          { text: "日常解渴，当水喝。", effects: {"社交氛围": 1} },
+          { text: "吃饭的时候，搭配餐饮。", effects: {"社交氛围": 2} },
+          { text: "运动健身、需要活力的时候。", effects: {"功能健康": 2} },
+          { text: "熬夜、加班、开车，需要提神醒脑！", effects: {"冰爽强度": 5} },
+          { text: "朋友聚会、开派对，想来点特别的。", effects: {"社交氛围": 5} }
+      ]},
+      { id: 4, text: "你渴望一种什么样的口感体验？", options: [
+          { text: "极致的冰爽，越凉越带劲！", effects: {"冰爽强度": 5} },
+          { text: "丰富的水果风味，像在喝果汁茶。", effects: {"水果风味": 4} },
+          { text: "经典的味道，永不过时。", effects: {"甜度级": 2} },
+          { text: "清爽解腻，没什么负担感。", effects: {"甜度级": -1, "水果风味": 1} },
+          { text: "想来点微醺和成年人的感觉。", effects: {"社交氛围": 5, "水果风味": 2} }
+      ]}
+    ];
+
+    const recommendationTemplates = {
+      "原味": "经典永不过时！你可能会喜欢【原味康师傅冰红茶】。",
+      "无糖": "健康无负担！【无糖康师傅冰红茶】完美契合你的需求。",
+      "低糖高纤": "健康进阶之选！【低糖高纤康师傅冰红茶】满足你对健康的全面追求。",
+      "热带水果": "热带风情之旅！【热带风味康师傅冰红茶】带来丰富的复合果香。",
+      "柠檬冰绿茶": "清新解腻首选！【柠檬冰绿茶】非常适合搭配餐饮或清爽时刻。",
+      "薄荷金银花劲凉": "提神醒脑利器！【薄荷金银花劲凉】强烈冰刺感绝对能让你瞬间清醒。",
+      "2倍薄荷金银花劲凉": "极致冰爽体验！【2倍薄荷金银花劲凉】将带给你加倍刺激。",
+      "西瓜": "夏日限定欢乐！【西瓜风味康师傅冰红茶】带来清甜西瓜口感。",
+      "鸡尾酒风味长岛冰茶": "派对氛围担当！【鸡尾酒风味长岛冰茶】适合聚会场合。"
+    };
+
+    let userVector = [0, 0, 0, 0, 0, 0];
+    let currentQuestionIndex = 0;
+    let candidatePool = null;
+
+    const chatContainer = document.getElementById('chatContainer');
+    const inputContainer = document.getElementById('inputContainer');
+
+    // 添加机器人消息
+    function addBotMessage(text) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message bot-message';
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      contentDiv.textContent = text;
+      
+      messageDiv.appendChild(contentDiv);
+      chatContainer.appendChild(messageDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // 添加用户消息
+    function addUserMessage(text) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message user-message';
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      contentDiv.textContent = text;
+      
+      messageDiv.appendChild(contentDiv);
+      chatContainer.appendChild(messageDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // 显示选项
+    function showOptions(options) {
+      // 清空输入容器
+      inputContainer.innerHTML = '';
+      
+      const optionsContainer = document.createElement('div');
+      optionsContainer.className = 'options-container';
+      
+      options.forEach(option => {
+        const button = document.createElement('button');
+        button.className = 'option-btn';
+        button.textContent = option.text;
+        button.onclick = () => selectOption(option);
+        optionsContainer.appendChild(button);
+      });
+      
+      inputContainer.appendChild(optionsContainer);
+    }
+
+    // 显示打字指示器
+    function showTypingIndicator() {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message bot-message';
+      messageDiv.id = 'typing-indicator';
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'typing-indicator';
+      typingDiv.innerHTML = '输入中<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
+      
+      contentDiv.appendChild(typingDiv);
+      messageDiv.appendChild(contentDiv);
+      chatContainer.appendChild(messageDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      
+      return messageDiv;
+    }
+
+    // 移除打字指示器
+    function removeTypingIndicator() {
+      const indicator = document.getElementById('typing-indicator');
+      if (indicator) {
+        indicator.remove();
+      }
+    }
+
+    // 询问问题
+    function askQuestion(index) {
+      if (index >= questions.length) {
+        // 所有问题已回答，开始推荐
+        const typingIndicator = showTypingIndicator();
+        setTimeout(() => {
+          removeTypingIndicator();
+          recommendProduct();
+        }, 1500);
+        return;
+      }
+      
+      currentQuestionIndex = index;
+      const question = questions[index];
+      
+      const typingIndicator = showTypingIndicator();
+      
+      setTimeout(() => {
+        removeTypingIndicator();
+        addBotMessage(question.text);
+        showOptions(question.options);
+      }, 1000);
+    }
+
+    // 选择选项
+    function selectOption(option) {
+      addUserMessage(option.text);
+      
+      // 应用选项效果到用户向量
+      if (option.effects) {
+        Object.entries(option.effects).forEach(([dimension, value]) => {
+          const index = dimensions.indexOf(dimension);
+          if (index !== -1) {
+            userVector[index] += value;
+          }
+        });
+      }
+      
+      // 应用候选池过滤
+      if (option.text === "绿茶") {
+        applyCandidateFilter("绿茶");
+      } else if (option.text.includes("健康无负担")) {
+        applyCandidateFilter("健康无负担");
+      } else if (option.text.includes("膳食纤维")) {
+        applyCandidateFilter("膳食纤维");
+      }
+      
+      // 清空输入容器并询问下一个问题
+      inputContainer.innerHTML = '';
+      setTimeout(() => askQuestion(currentQuestionIndex + 1), 500);
+    }
+
+    function calculateDistance(userVec, productVec) {
+      let weightedSquaredDiff = 0;
+      for (let i = 0; i < userVec.length; i++) {
+        if (dimensions[i] === "基底茶类") {
+          if (userVec[i] !== 0 && userVec[i] !== productVec[i]) {
+            weightedSquaredDiff += 10 * dimensionWeights[i];
+          }
+        } else {
+          const diff = userVec[i] - productVec[i];
+          weightedSquaredDiff += (diff * diff) * dimensionWeights[i];
+        }
+      }
+      return Math.sqrt(weightedSquaredDiff);
+    }
+
+    function applyCandidateFilter(tag) {
+      const filtered = tagToCandidates[tag];
+      if (!filtered) return;
+      if (candidatePool === null) {
+        candidatePool = new Set(filtered);
+      } else {
+        candidatePool = new Set(filtered.filter(p => candidatePool.has(p)));
+      }
+    }
+
+    function recommendProduct() {
+      const filteredProducts = candidatePool ? Array.from(candidatePool) : Object.keys(products);
+      let topThree;
+
+      // 修复了随机选择逻辑，确保不会超出数组范围
+      if (filteredProducts.length === 0) {
+        // 从指定的四种产品中随机选择
+        const specifiedProducts = ["薄荷金银花劲凉", "2倍薄荷金银花劲凉", "原味", "西瓜"];
+        const availableProducts = specifiedProducts.filter(p => p in products);
+        
+        // 确保不会选择超出数组范围
+        const numChoices = Math.min(2, availableProducts.length);
+        const randomChoices = [...availableProducts]
+          .sort(() => 0.5 - Math.random())
+          .slice(0, numChoices);
+        
+        // 构建topThree数组，确保不会超出范围
+        topThree = [["低糖高纤", "柠檬冰绿茶", 0]];
+        for (let i = 0; i < randomChoices.length; i++) {
+          topThree.push([randomChoices[i], 0]);
+        }
+      } else {
+        const distances = {};
+        for (const product of filteredProducts) {
+          distances[product] = calculateDistance(userVector, products[product]);
+        }
+        topThree = Object.entries(distances).sort((a, b) => a[1] - b[1]).slice(0, 3);
+      }
+
+      // 确保随机索引不会超出范围
+      const randomIndex = Math.floor(Math.random() * topThree.length);
+      const recommendedProduct = topThree[randomIndex][0];
+
+      let recommendationText;
+      if (filteredProducts.length === 0) {
+        recommendationText = `<strong>推荐结果: ${recommendedProduct}</strong><br><br>${recommendationTemplates[recommendedProduct]}<br><br><em>（你的偏好较为独特，我们为你准备了精选推荐哦~）</em>`;
+      } else {
+        recommendationText = `<strong>推荐结果: ${recommendedProduct}</strong><br><br>${recommendationTemplates[recommendedProduct]}`;
+      }
+
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message bot-message';
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content product-recommendation';
+      contentDiv.innerHTML = recommendationText;
+      messageDiv.appendChild(contentDiv);
+      chatContainer.appendChild(messageDiv);
+
+      const restartDiv = document.createElement('div');
+      restartDiv.style.textAlign = 'center';
+      restartDiv.style.marginTop = '20px';
+      const restartButton = document.createElement('button');
+      restartButton.textContent = '再次尝试';
+      restartButton.className = 'restart-btn';
+      restartButton.onclick = restartChat;
+      restartDiv.appendChild(restartButton);
+      inputContainer.appendChild(restartDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // 重新开始聊天
+    function restartChat() {
+      // 重置状态
+      userVector = [0, 0, 0, 0, 0, 0];
+      currentQuestionIndex = 0;
+      candidatePool = null;
+      
+      // 清空聊天和输入区域
+      chatContainer.innerHTML = '';
+      inputContainer.innerHTML = '';
+      
+      // 重新开始对话
+      addBotMessage("嗨！我是康师傅冰红茶推荐小助手~ 让我们重新开始，找到你的\"本命\"口味！");
+      setTimeout(() => { askQuestion(0); }, 1500);
+    }
+
+    window.onload = function () {
+      addBotMessage("嗨！我是康师傅冰红茶推荐小助手~ 通过几个简单的问题，我就能帮你找到你的\"本命\"口味！");
+      setTimeout(() => { askQuestion(0); }, 1500);
+    };
+  </script>
+
+  <!-- 非关键JS异步加载 -->
+  <script async src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  
+  <!-- Google Analytics (示例，需要替换GA_MEASUREMENT_ID) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'GA_MEASUREMENT_ID');
+  </script>
+</body>
+</html>
